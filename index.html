@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title>Pseudorandom Password Generator</title>
+		<link rel="icon" type="image/png" href="favicon.png">
+		<link rel="stylesheet" type="text/css" href="styles.css">
+		<script src="scripts.js"></script>
+	</head>
+	<body>
+		<h1 id="header">Pseudorandom Password Generator</h1>
+		<div id="container">
+			<form action="#">
+				<div class="block">
+					<div class="submit" onclick="generateClicked()">Generate</div>
+					<input type="text" id="password">
+					<div class="submit" onclick="copyToClipboardClicked()">Copy to clipboard</div>
+					<div class="submit" onclick="clearClipboardClicked()">Clear clipboard</div>
+					<input type="text" id="empty" value="empty">
+				</div>
+				<div class="block">
+					<span id="errors"></span>
+				</div>
+				
+				<div class="block">
+					<input type="number" id="password-length" min="1" max="1000" value="10" >
+					<label for="password-length">Length of password</label>
+				</div>
+				<div class="block">
+					<input class="checkbox" type="checkbox" id="numbers" 
+						onchange="checkIfAllUnchecked()">
+					<label for="numbers" class="checkbox-label">Numbers (1234567890)</label>
+				</div>
+				<div class="block">				
+					<input class="checkbox" type="checkbox" id="lower-case" 
+						onchange="checkIfAllUnchecked()">
+					<label for="lower-case" class="checkbox-label">Lower case letters (abcdefghijklmnopqrstuvwxyz)</label>
+				</div>
+				<div class="block">
+					<input class="checkbox" type="checkbox" id="upper-case" 
+						onchange="checkIfAllUnchecked()">
+					<label for="upper-case" class="checkbox-label">Upper case letters (ABCDEFGHIJKLMNOPQRSTUVWXYZ)</label>
+				</div>
+				<div class="block">
+					<input class="checkbox" type="checkbox" id="specials" 
+						onchange="checkIfAllUnchecked()">
+					<label for="specials" class="checkbox-label">Specials (!\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~)</label>
+				</div>
+			</form>
+		</div>
+		<div id="clipboard-message" class="hide"></div>
+	</body>
+</html>
