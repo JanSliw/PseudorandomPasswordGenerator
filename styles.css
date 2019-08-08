@@ -128,3 +128,15 @@ label.checkbox-label {
 	border: 0px;
 	padding: 0px;
 }
+
+#download {
+	text-align: center;
+	font-size: 12px;
+}
+
+a:link {
+	color: #3399ff;
+}
+a:visited {
+	color: #0033cc;
+}
