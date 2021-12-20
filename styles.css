@@ -129,9 +129,13 @@ label.checkbox-label {
 	padding: 0px;
 }
 
-#download {
+#footer {
 	text-align: center;
 	font-size: 12px;
+}
+
+#version {
+	font-size: 9px;
 }
 
 a:link {

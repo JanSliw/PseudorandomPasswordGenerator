@@ -1,15 +1,25 @@
 
-var errorMessages = [
+const errorMessages = [
 	"At least one of character sets must be provided"
 	, "Password length must be between 1 and 1000. Passwords of length < 10 are not recommended."
 ];
 	
-var errors = [];
-var charSet = [];
-var passwordLength = 0;
-var maxTimeoutIndex = 0;
+let errors = [];
+let charSet = [];
+let passwordLength = 0;
+let maxTimeoutIndex = 0;
+const numbersCharSet = "1234567890";
+const upperCaseCharSet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+const lowerCaseCharSet = "abcdefghijklmnopqrstuvwxyz";
+const safeSpecialsCharSet = "!#$%&()*+,-./:;@[\\]^_";
+const specialsCharSet = "!\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~";
+const numbersWeight = 4;
+const upperCaseWeight = 10;
+const lowerCaseWeight = 10;
+const safeSpecialsWeight = 1;
+const specialsWeight = 1;
 
-window.onload = function() {loadFormValues();};
+window.onload = function() {loadFormValuesFromCookies();};
 
 function generateClicked() {
 	event.preventDefault();
@@ -30,6 +40,7 @@ function checkIfAllUnchecked() {
 	if (!document.getElementById("numbers").checked
 		&& !document.getElementById("upper-case").checked
 		&& !document.getElementById("lower-case").checked
+		&& !document.getElementById("safe-specials").checked
 		&& !document.getElementById("specials").checked){
 			addErrorText(errorMessages[0]);
 	} else {
@@ -51,8 +62,8 @@ function removeErrorText(text) {
 
 function setErrors() {
 	
-	var errorsText = "";
-	for (var i = 0; i < errors.length; i++) {
+	let errorsText = "";
+	for (let i = 0; i < errors.length; i++) {
 		errorsText += "<br>" + errors[i];
 	}
 	if (errorsText.substring(0, 4) === "<br>") {
@@ -71,7 +82,7 @@ function generatePassword() {
 	getData();	
 	if (!validateForm()) return;
 	setPassword();
-	saveFormValues();
+	saveFormValuesAsCookies();
 	copyPasswordToClipBoard();
 	// clear clipboard - blocked by the browser
 	// maxTimeoutIndex = setTimeout(emptyClipboardTimeOut(), 10000);
@@ -91,7 +102,7 @@ function getData() {
 }
 
 function getPasswordLength() {
-	var enteredPasswordLength = document.getElementById("password-length").value;
+	const enteredPasswordLength = document.getElementById("password-length").value;
 	if (enteredPasswordLength.length == 0) {
 		addErrorText(errorMessages[1]);
 		passwordLength = -1;
@@ -126,22 +137,36 @@ function validateForm() {
 }
 
 function getCharSet() {
-	
-	var numbers = "1234567890";
-	var upperCase = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-	var lowerCase = "abcdefghijklmnopqrstuvwxyz";
-	var specials = "!\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~";
-	
-	var characters = "";
-	
-	if (document.getElementById("numbers").checked) characters += numbers;
-	if (document.getElementById("upper-case").checked) characters += upperCase;
-	if (document.getElementById("lower-case").checked) characters += lowerCase;
-	if (document.getElementById("specials").checked) characters += specials;
-	
+	let characters = "";
+
+	if (document.getElementById("numbers").checked) {
+		for (let i = 0; i < numbersWeight; i++) {
+			characters += numbersCharSet;
+		}
+	}
+	if (document.getElementById("upper-case").checked)  {
+		for (let i = 0; i < upperCaseWeight; i++) {
+			characters += upperCaseCharSet;
+		}
+	}
+	if (document.getElementById("lower-case").checked) {
+		for (let i = 0; i < lowerCaseWeight; i++) {
+			characters += lowerCaseCharSet;
+		}
+	}
+	if (document.getElementById("safe-specials").checked) {
+		for (let i = 0; i < safeSpecialsWeight; i++) {
+			characters += safeSpecialsCharSet;
+		}
+	} else if (document.getElementById("specials").checked) {
+		for (let i = 0; i < specialsWeight; i++) {
+			characters += specialsCharSet;
+		}
+	}
+
 	charSet = [];
 	
-	for (var i = 0; i<characters.length; i++) {
+	for (let i = 0; i<characters.length; i++) {
 		charSet.push(characters.charAt(i));
 	}
 	
@@ -149,37 +174,87 @@ function getCharSet() {
 }
 
 function setPassword() {
-	var res = "";
-	var charIndex = 0;
-	var cryptO = window.crypto || window.msCrypto;
-	
-	if (cryptO === "undefined") {
-		for (var i = 0; i < passwordLength; i++) {
-			charIndex = Math.floor(Math.random()*charset.length);
-			res += "" + charSet[charIndex];
-		}
-	} else {
-		var charIndexes = new Uint32Array(passwordLength);
-		cryptO.getRandomValues(charIndexes);
-		for (var i = 0; i < passwordLength; i++) {
-			charIndex = charIndexes[i]%charSet.length;
-			res += "" + charSet[charIndex];
+	document.getElementById("password").value = generateValidPassword();
+}
+
+function generateValidPassword() {
+	let res = "";
+	const cryptO = window.crypto || window.msCrypto;
+	const isWindowCryptoAvailable = cryptO !== "undefined";
+
+	while (!isPasswordValid(res)) {
+		if (isWindowCryptoAvailable) {
+			res = generateWindowCryptoPassword(cryptO);
+		} else {
+			res = generateMathRandPassword();
 		}
 	}
-	document.getElementById("password").value = res;
-	
-	return;
+	return res;
+}
+
+function generateMathRandPassword() {
+	let res = "";
+	let charIndex = 0;
+
+	for (let i = 0; i < passwordLength; i++) {
+		charIndex = Math.floor(Math.random()*charSet.length);
+		res += "" + charSet[charIndex];
+	}
+	return res;
+}
+
+function generateWindowCryptoPassword(cryptO) {
+	let res = "";
+	let charIndex = 0;
+	const charIndexes = new Uint32Array(passwordLength);
+
+	cryptO.getRandomValues(charIndexes);
+	for (let i = 0; i < passwordLength; i++) {
+		charIndex = charIndexes[i]%charSet.length;
+		res += "" + charSet[charIndex];
+	}
+	return res;
+}
+
+function isPasswordValid(password) {
+	let numbersCount = 0;
+	let upperCaseCount = 0;
+	let lowerCaseCount = 0;
+	let safeSpecialsCount = 0;
+	let specialsCount = 0;
+
+	if (password.length === 0) return false;
+
+	for (let i = 0; i < password.length; i++) {
+		numbersCount += numbersCharSet.includes(password[i]);
+		upperCaseCount += upperCaseCharSet.includes(password[i]);
+		lowerCaseCount += lowerCaseCharSet.includes(password[i]);
+		safeSpecialsCount += safeSpecialsCharSet.includes(password[i]);
+		specialsCount += specialsCharSet.includes(password[i]);
+	}
+
+	if (document.getElementById("numbers").checked && numbersCount === 0) return false;
+	if (document.getElementById("upper-case").checked && upperCaseCount === 0) return false;
+	if (document.getElementById("lower-case").checked && lowerCaseCount === 0) return false;
+	if (document.getElementById("safe-specials").checked && safeSpecialsCount === 0) return false;
+	if (document.getElementById("specials").checked && specialsCount === 0) return false;
+
+	return true;
+}
+
+function occursInText(searchFor, text) {
+	return text.includes(searchFor);
 }
 
 function copyPasswordToClipBoard() {
-	var passwordElement = document.getElementById("password");
+	const passwordElement = document.getElementById("password");
 	passwordElement.select();
 	document.execCommand("copy");
 	displayClipboardWindow("Your password has been copied to clipboard");
 }
 
 function emptyClipboard() {
-	var emptyElement = document.getElementById("empty");
+	const emptyElement = document.getElementById("empty");
 	emptyElement.select();
 	document.execCommand("copy");
 	displayClipboardWindow("Your clipboard has been cleared");
@@ -187,7 +262,7 @@ function emptyClipboard() {
 
 function displayClipboardWindow(innerText) {
 	stopAllTimeouts();
-	var clipboardMessageElement = document.getElementById("clipboard-message")
+	const clipboardMessageElement = document.getElementById("clipboard-message")
 	hideClipboardWindow();
 	maxTimeoutIndex = setTimeout(function() {
 									clipboardMessageElement.className = "show";
@@ -223,46 +298,58 @@ function hideClipboardWindow() {
 	
 }
 
-function saveFormValues() {
-	var numbers = document.getElementById("numbers").checked ? 1 : 0;
-	var lowerCase = document.getElementById("lower-case").checked ? 1 : 0;
-	var upperCase = document.getElementById("upper-case").checked ? 1 : 0;
-	var specials = document.getElementById("specials").checked ? 1 : 0;
-	var passwordLength = document.getElementById("password-length").value;
+function saveFormValuesAsCookies() {
+	const numbers = document.getElementById("numbers").checked ? 1 : 0;
+	const lowerCase = document.getElementById("lower-case").checked ? 1 : 0;
+	const upperCase = document.getElementById("upper-case").checked ? 1 : 0;
+	const safeSpecials = document.getElementById("safe-specials").checked ? 1 : 0;
+	const specials = document.getElementById("specials").checked ? 1 : 0;
+	const passwordLength = document.getElementById("password-length").value;
 
 	setCookie("pseudorandomPasswordGenerator_numbers", numbers, 365);
 	setCookie("pseudorandomPasswordGenerator_lowerCase", lowerCase, 365);
 	setCookie("pseudorandomPasswordGenerator_upperCase", upperCase, 365);
+	setCookie("pseudorandomPasswordGenerator_safeSpecials", safeSpecials, 365);
 	setCookie("pseudorandomPasswordGenerator_specials", specials, 365);
 	setCookie("pseudorandomPasswordGenerator_passwordLength", passwordLength, 365);
 }
 	
-function loadFormValues() { 
-	var numbers = (getCookie("pseudorandomPasswordGenerator_numbers") == 1);
-	var lowerCase = (getCookie("pseudorandomPasswordGenerator_lowerCase") == 1);
-	var upperCase = (getCookie("pseudorandomPasswordGenerator_upperCase") == 1);
-	var specials = (getCookie("pseudorandomPasswordGenerator_specials") == 1);
-	var passwordLength = getCookie("pseudorandomPasswordGenerator_passwordLength");
-	
+function loadFormValuesFromCookies() {
+	let numbers = (getCookie("pseudorandomPasswordGenerator_numbers") == 1);
+	let lowerCase = (getCookie("pseudorandomPasswordGenerator_lowerCase") == 1);
+	let upperCase = (getCookie("pseudorandomPasswordGenerator_upperCase") == 1);
+	let safeSpecials = (getCookie("pseudorandomPasswordGenerator_safeSpecials") == 1);
+	let specials = (getCookie("pseudorandomPasswordGenerator_specials") == 1);
+	let passwordLength = getCookie("pseudorandomPasswordGenerator_passwordLength");
+	const valuesFromCookiesLoaded = passwordLength !== "";
+
+	if (!valuesFromCookiesLoaded) {
+		numbers = true;
+		lowerCase = true;
+		upperCase = true;
+		safeSpecials = true;
+		passwordLength = 20;
+	}
 	document.getElementById("numbers").checked = numbers;
 	document.getElementById("lower-case").checked = lowerCase;
 	document.getElementById("upper-case").checked = upperCase;
+	document.getElementById("safe-specials").checked = safeSpecials;
 	document.getElementById("specials").checked = specials;
 	document.getElementById("password-length").value = passwordLength;
 }
 
 function setCookie(cname, cvalue, exdays) {
-  var d = new Date();
+  const d = new Date();
   d.setTime(d.getTime() + (exdays * 24 * 60 * 60 * 1000));
-  var expires = "expires="+d.toUTCString();
+  const expires = "expires="+d.toUTCString();
   document.cookie = cname + "=" + cvalue + ";" + expires + ";path=/";
 }
 
 function getCookie(cname) {
-  var name = cname + "=";
-  var ca = document.cookie.split(';');
-  for(var i = 0; i < ca.length; i++) {
-    var c = ca[i];
+  const name = cname + "=";
+  const ca = document.cookie.split(';');
+  for(let i = 0; i < ca.length; i++) {
+    let c = ca[i];
     while (c.charAt(0) == ' ') {
       c = c.substring(1);
     }
