@@ -42,13 +42,21 @@
 					<label for="upper-case" class="checkbox-label">Upper case letters (ABCDEFGHIJKLMNOPQRSTUVWXYZ)</label>
 				</div>
 				<div class="block">
-					<input class="checkbox" type="checkbox" id="specials" 
-						onchange="checkIfAllUnchecked()">
+					<input class="checkbox" type="checkbox" id="safe-specials"
+						   onchange="checkIfAllUnchecked()">
+					<label for="safe-specials" class="checkbox-label">Safe specials (!#$%&()*+,-./:;@[\\]^_)</label>
+				</div>
+				<div class="block">
+					<input class="checkbox" type="checkbox" id="specials"
+						   onchange="checkIfAllUnchecked()">
 					<label for="specials" class="checkbox-label">Specials (!\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~)</label>
 				</div>
 			</form>
 		</div>
-		<p id="download">Download from <a href="https://github.com/JanSliw/PseudorandomPasswordGenerator">GitHub</a></p>
+		<div id="footer">
+			<p id="download">Download from <a href="https://github.com/JanSliw/PseudorandomPasswordGenerator">GitHub</a></p>
+			<p id="version">version 0.1.1</p>
+		</div>
 		<div id="clipboard-message" class="hide"></div>
 	</body>
 </html>
